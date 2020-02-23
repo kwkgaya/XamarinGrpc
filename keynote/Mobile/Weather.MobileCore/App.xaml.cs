@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Net.Http;
+using System.Threading.Tasks;
+using Google.Protobuf.WellKnownTypes;
+using Grpc.Net.Client;
 using Xamarin.Essentials;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
@@ -21,7 +25,26 @@ namespace Weather.MobileCore
         {
             InitializeComponent();
 
+            Task.Run(async () => await GetWeather());
+
             MainPage = new MainPage();
+        }
+
+        public async Task<WeatherResponse> GetWeather()
+        {
+            try
+            {
+                var httpClient = new HttpClient();
+                var channel = GrpcChannel.ForAddress(App.GRPCBackendUrl, new GrpcChannelOptions { HttpClient = httpClient });
+                var weatherClient = new Weather.WeatherClient(channel);
+                var result = await weatherClient.GetWeatherAsync(new Empty());
+                return result;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
 
         protected override void OnStart()
